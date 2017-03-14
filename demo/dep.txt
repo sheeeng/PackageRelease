@@ -1,0 +1,4 @@
+net.praqma:apptest:1.0.0
+net.praqma:libtest-osx:1.0.0
+net.praqma:project2-api:2.0.0
+net.praqma:VBA_demo_lib:1.0.0
