@@ -22,9 +22,9 @@ class BuildPublishing {
         String pubName = 'publication'
         Project project = extension.project
 
-        Task executeBuildTask = project.resolveDependencies
+        Task executeBuildTask = project.copyDepFile
 
-        Task task = project.tasks.create(name: "moveDependencies", type: Zip) {
+        Task taskZip = project.tasks.create(name: "moveDependencies", type: Zip) {
             dependsOn executeBuildTask
             with project.copySpec(closure)
         }
@@ -35,7 +35,7 @@ class BuildPublishing {
                     version project.version
                     artifactId extension.productName
 
-                    artifact task
+                    artifact taskZip
                 }
         }
     }

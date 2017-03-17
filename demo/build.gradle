@@ -1,12 +1,6 @@
-buildscript {
-    repositories {
-      mavenLocal()
-    }
-    dependencies {
-        classpath "net.praqma:PackagePlugin:1.0.0"
-    }
+plugins {
+    id "net.praqma.package" version "1.0.1"
 }
-apply plugin: 'net.praqma.package'
 
 buildproperties.publishing {
     zip {

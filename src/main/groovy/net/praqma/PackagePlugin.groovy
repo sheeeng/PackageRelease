@@ -4,10 +4,11 @@ import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.api.*
+import java.io.File
 
-import org.gradle.api.artifacts.Configuration
-import org.gradle.api.tasks.Exec
+import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.Sync
+import org.gradle.api.tasks.diagnostics.DependencyReportTask;
 
 @CompileDynamic
 class PackagePlugin implements Plugin<Project> {
@@ -96,14 +97,28 @@ class PackagePlugin implements Plugin<Project> {
     @CompileDynamic
     private void createTasks(BuildExtension buildExtension) {
 
-        Sync t3 = createBuildTask('resolveDependencies', Sync) {
-          project.configurations._lib.collect {
-            String name = it.getName().split('-')[0]
-            from (it){
-              into name
+        Sync t1 = createBuildTask('resolveDependencies', Sync) {
+            project.configurations._lib.collect {
+                String name = it.getName().split('-')[0]
+                from (it){
+                    into name
+                }
             }
-          }
-          into ("${project.buildDir}/resolvedDep")
+            into ("${project.buildDir}/resolvedDep")
+        }
+
+        Task t2 = createBuildTask('listDeps', DependencyReportTask) {
+            dependsOn t1
+            Set configs = [project.configurations._lib]
+            setConfigurations(configs)
+            File file = new File('package.txt')
+            outputFile = file
+        }
+
+        Task t3 = createBuildTask('copyDepFile', Copy) {
+            dependsOn t2
+            from('package.txt')
+            into "${project.buildDir}/resolvedDep"
         }
     }
 

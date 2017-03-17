@@ -3,7 +3,7 @@ apply plugin: 'maven-publish'
 apply plugin: 'com.gradle.plugin-publish'
 
 
-version = '1.0.0'
+version = '1.0.1'
 group = 'net.praqma'
 
 def artifact = 'PackagePlugin'
