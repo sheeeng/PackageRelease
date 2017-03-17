@@ -111,15 +111,10 @@ class PackagePlugin implements Plugin<Project> {
             dependsOn t1
             Set configs = [project.configurations._lib]
             setConfigurations(configs)
-            File file = new File('package.txt')
+            File file = new File("${project.buildDir}/resolvedDep/package.txt")
             outputFile = file
         }
 
-        Task t3 = createBuildTask('copyDepFile', Copy) {
-            dependsOn t2
-            from('package.txt')
-            into "${project.buildDir}/resolvedDep"
-        }
     }
 
     @CompileDynamic

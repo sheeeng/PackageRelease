@@ -22,10 +22,12 @@ class BuildPublishing {
         String pubName = 'publication'
         Project project = extension.project
 
-        Task executeBuildTask = project.copyDepFile
+        Task createDepFile = project.listDeps
+        Task executeBuildTask = project.resolveDependencies
 
         Task taskZip = project.tasks.create(name: "moveDependencies", type: Zip) {
             dependsOn executeBuildTask
+            from createDepFile
             with project.copySpec(closure)
         }
 
