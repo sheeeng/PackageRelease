@@ -7,7 +7,7 @@ This gradle plugin collects artifacts from one repo and promote them to a new re
 1. Add the gradle plugin to your build.gradle:
 ```
     plugins {
-        id "net.praqma.package" version "1.0.0"
+        id "net.praqma.package" version "1.0.1"
     }
 ```
 
@@ -33,7 +33,7 @@ buildproperties.publishing {
 4. Add your artifacts to a file (artifacts.txt) divided by new line, containing group:name:version
 ```
     com.gradle:plugin:1.2.3
-    net.default.customLib:1.0.0
+    net.default.customLib:1.0.+
 ```
 5. Update gradle.properties in your ~/.gradle folder
 ```
