@@ -1,9 +1,41 @@
 plugins {
-    id "net.praqma.package" version "1.0.1"
+    id "net.praqma.package" version "1.0.2"
 }
 
 buildproperties.publishing {
     zip {
         from ('build/resolvedDep/')
+    }
+}
+
+
+task "move" {
+    doLast{
+        def fromRepo, toRepo, file, fileVersion
+        if(project.hasProperty('fromRepo') && project.hasProperty('toRepo') && project.hasProperty('file') && project.hasProperty('fileVersion')){
+            fromRepo = project.properties.fromRepo
+            toRepo = project.properties.toRepo
+            fileVersion = project.properties.fileVersion
+            file = project.properties.file
+        }
+        else{
+            print('''Please provide inputs with parameter
+                -P fromRepo=?
+                -P toRepo=?
+                -P file=?
+                -P fileVersion=?''')
+        }
+        def map =['from: ':fromRepo,'to: ':toRepo,'file: ':file,'version: ':fileVersion]
+        map.each{
+            k,v -> println("${k}${v}")
+        }
+
+        def cmdDown = ["wget", "--user=admin","--password=admin123","localhost:8081/nexus/content/repositories/${fromRepo}/net/praqma/${file}/${fileVersion}/${file}-${fileVersion}.zip"]
+        cmdDown.execute().waitFor()
+        if(new File("${file}-${fileVersion}.zip").exists()){
+            def cmdUp = ["curl", "-X", "POST","-u", "admin:admin123","--upload-file","${file}-${fileVersion}.zip","localhost:8081/nexus/content/repositories/${toRepo}/net/praqma/${file}/${fileVersion}/${file}-${fileVersion}.zip"]
+            println cmdUp.execute().text
+            "rm ${file}-${fileVersion}.zip".execute()
+        }
     }
 }
