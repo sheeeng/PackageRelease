@@ -8,34 +8,153 @@ buildproperties.publishing {
     }
 }
 
+def curlLogFile = "curl.log"
+def packageFile
 
 task "move" {
     doLast{
-        def fromRepo, toRepo, file, fileVersion
-        if(project.hasProperty('fromRepo') && project.hasProperty('toRepo') && project.hasProperty('file') && project.hasProperty('fileVersion')){
-            fromRepo = project.properties.fromRepo
-            toRepo = project.properties.toRepo
-            fileVersion = project.properties.fileVersion
-            file = project.properties.file
+        packageFile = "${file}-${fileVersion}.zip"
+
+        def fromRepo, toRepo, group, file, fileVersion
+        if (
+            project.hasProperty('fromRepo') \
+            && project.hasProperty('toRepo') \
+            && project.hasProperty('group') \
+            && project.hasProperty('file') \
+            && project.hasProperty('fileVersion')){
+                fromRepo = project.properties.fromRepo
+                toRepo = project.properties.toRepo
+                group = project.properties.group
+                fileVersion = project.properties.fileVersion
+                file = project.properties.file
         }
         else{
-            print('''Please provide inputs with parameter
-                -P fromRepo=?
-                -P toRepo=?
-                -P file=?
-                -P fileVersion=?''')
+            print('''
+                Usage:
+                    gradlew move [--info]
+                    -P fromRepo=<fromRepo>
+                    -P toRepo=<toRepo>
+                    -P group=<group>
+                    -P file=<file>
+                    -P fileVersion=<fileVersion>
+                ''')
+            throw new InvalidUserDataException("Missing arguments.")
         }
-        def map =['from: ':fromRepo,'to: ':toRepo,'file: ':file,'version: ':fileVersion]
-        map.each{
-            k,v -> println("${k}${v}")
-        }
+        println ""
 
-        def cmdDown = ["wget", "--user=admin","--password=admin123","localhost:8081/nexus/content/repositories/${fromRepo}/net/praqma/${file}/${fileVersion}/${file}-${fileVersion}.zip"]
+        println 'Variables Map:'
+        def map =[
+            'from: ':fromRepo,
+            'to: ':toRepo,
+            'group: ':group,
+            'file: ':file,
+            'version: ':fileVersion
+        ]
+        map.each{
+            k,v -> println "* " + "${k}${v}"
+        }
+        println ""
+
+        println 'Tokenized Group:'
+        def tokenizedGroup = group.tokenize('.')
+        tokenizedGroup.each {
+            println "* " + it
+        }
+        println ""
+
+        println 'Joined Group:'
+        def joinedGroup = tokenizedGroup.join("/")
+        println "* " + joinedGroup
+        println ""
+
+        def cmdDown = [
+            "wget",
+            "--user=admin",
+            "--password=admin123",
+            "${repositoryManagerUrl}/${fromRepo}/${joinedGroup}/${file}/${fileVersion}/${packageFile}"
+        ]
+        println "Download:"
+        println "* " + cmdDown
         cmdDown.execute().waitFor()
-        if(new File("${file}-${fileVersion}.zip").exists()){
-            def cmdUp = ["curl", "-X", "POST","-u", "admin:admin123","--upload-file","${file}-${fileVersion}.zip","localhost:8081/nexus/content/repositories/${toRepo}/net/praqma/${file}/${fileVersion}/${file}-${fileVersion}.zip"]
-            println cmdUp.execute().text
-            "rm ${file}-${fileVersion}.zip".execute()
+        println ""
+
+        if ( new File("${packageFile}").exists() ) {
+            def cmdUp = [
+                "curl",
+                "--include",
+                "--show-error",
+                "--silent",
+                "--request", "POST",
+                "--user", "admin:admin123",
+                "--write-out", "%{http_code}",
+                "--output", "${curlLogFile}", // https://superuser.com/a/862395
+                "--upload-file",
+                "${file}-${fileVersion}.zip",
+                "${repositoryManagerUrl}/${toRepo}/${joinedGroup}/${file}/${fileVersion}/${packageFile}"
+            ]
+
+            println "Upload:"
+            println "* " + cmdUp
+            println ""
+
+            Process processUp = cmdUp.execute()
+            def outputStream = new StringBuffer()
+            def errorStream = new StringBuffer()
+            processUp.consumeProcessOutput( outputStream, errorStream )
+            processUp.waitFor()
+
+            int responseCode
+            if ( outputStream.size() > 0 ) {
+                println "HTTP Response Code:"
+                println "* " + outputStream
+                responseCode = outputStream.toInteger()
+            }
+
+            if ( responseCode == 201 ) {
+                println "File created successfully."
+            } else {
+                throw new PublishException("Fail to upload.")
+            }
+            project.delete('upload.log')
+
+            if ( errorStream.size() > 0 ) {
+                println "Error:"
+                println errorStream
+            }
+            println ""
+        } else {
+            throw new PublishException("Missing package for upload.")
+        }
+    }
+}
+
+gradle.taskGraph.afterTask { Task task, TaskState state ->
+    if ( task.name == 'move' ) {
+        def cmdClean = [
+            "rm",
+            "-v",
+            "${packageFile}"
+        ]
+        println "Clean:"
+        println "* " + cmdClean
+        println cmdClean.execute().text
+        println ""
+
+        if (state.failure) {
+            println "Gradle task fail."
+        } else {
+            println "Gradle task completed."
+            println ""
+
+            def cmdCleanLog = [
+                "rm",
+                "-v",
+                "${curlLogFile}"
+            ]
+            println "Clean Log:"
+            println "* " + cmdCleanLog
+            println cmdCleanLog.execute().text
+            println ""
         }
     }
 }
