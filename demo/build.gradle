@@ -69,8 +69,8 @@ task "move" {
 
         def cmdDown = [
             "wget",
-            "--user=admin",
-            "--password=admin123",
+            "--user=${repositoryManagerUsername}",
+            "--password=${repositoryManagerPassword}",
             "${repositoryManagerUrl}/${fromRepo}/${joinedGroup}/${file}/${fileVersion}/${packageFile}"
         ]
         println "Download:"
@@ -85,7 +85,7 @@ task "move" {
                 "--show-error",
                 "--silent",
                 "--request", "POST",
-                "--user", "admin:admin123",
+                "--user", "${repositoryManagerUsername}:${repositoryManagerPassword}",
                 "--write-out", "%{http_code}",
                 "--output", "${curlLogFile}", // https://superuser.com/a/862395
                 "--upload-file",
