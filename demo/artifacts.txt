@@ -1,4 +1,10 @@
-net.praqma:apptest:1.0.0
-net.praqma:libtest-osx:1.0.1
-net.praqma:project2-api:2.0.+
-net.praqma:VBA_demo_lib:1.0.0
+org.codehaus.plexus:plexus-utils:3.0.+
+junit:junit:4.12
+org.apache.maven.plugins:maven-resources-plugin:3.0.+
+org.apache.maven.plugins:maven-compiler-plugin:3.6.1
+org.apache.maven.plugins:maven-surefire-plugin:2.+
+commons-lang:commons-lang:2.+
+commons-collections:commons-collections:3.+
+org.codehaus.plexus:plexus-interpolation:1.+
+org.apache.maven.shared:maven-filtering:3.+
+org.codehaus.plexus:plexus-compiler-api:2.+
