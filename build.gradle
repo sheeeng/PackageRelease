@@ -18,15 +18,33 @@ task copyDependencies(type: Copy) {
    into 'dependencies'
 }
 
-def someFile = file('build/somefile.txt')
+def someFile = file('dependencies/gildedrose-0.0.2-2017.09.26T12.23.20.258-9fc13ae88875e4dcf62fc55e0b42ece5ef7bbe69.jar')
 artifacts {
     archives someFile
+}
+
+
+publishing {
+    repositories {
+        maven {
+            // change to point to your repo, e.g. http://my.org/repo
+            url "http://18.194.104.10:8081/repository/workshop-test"
+            credentials {
+                username "$mavenUser"
+                password "$mavenPassword"
+            }
+        }
+    }
 }
 
 publishing {
     publications {
         mavenJava(MavenPublication) {
-            from components.java
+            groupId 'net.praqma.codeacademy'
+            artifactId 'gildedrose'
+            version '0.0.2-2017.09.26T12.23.20.258-9fc13ae88875e4dcf62fc55e0b42ece5ef7bbe69'
+
+            artifact someFile
         }
     }
 }
