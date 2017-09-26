@@ -1,60 +1,31 @@
 apply plugin: 'groovy'
 apply plugin: 'maven-publish'
-apply plugin: 'com.gradle.plugin-publish'
+apply plugin: 'application'
 
-
-version = '1.0.1'
-group = 'net.praqma'
-
-def artifact = 'PackagePlugin'
-
-sourceCompatibility = targetCompatibility = '1.7'
-
-buildscript{
-  repositories {
+repositories {
     maven {
-      url "https://plugins.gradle.org/m2/"
+        url "http://18.194.104.10:8081/repository/workshop-dev/"
     }
-  }
-  dependencies {
-   classpath "com.gradle.publish:plugin-publish-plugin:0.9.7"
- }
 }
 
-pluginBundle {
-  website = 'https://github.com/praqma/PackageRelease'
-  vcsUrl = 'https://github.com/praqma/PackageRelease'
-  description = 'Release a bundeled collection of Artifacts'
-  tags = ['Artifacts', 'release', 'collection', 'versioning', 'staging']
 
-  plugins {
-    binaryArtifactPlugin {
-      id = 'net.praqma.package'
-      displayName = 'PackagePlugin'
-    }
-  }
+dependencies{
+	compile 'net.praqma.codeacademy:gildedrose:0.0.2-2017.09.26T12.23.20.258-9fc13ae88875e4dcf62fc55e0b42ece5ef7bbe69'
 }
 
-dependencies {
-    compile gradleApi()
-    compile localGroovy()
+task copyDependencies(type: Copy) {
+   from configurations.compile
+   into 'dependencies'
 }
 
+def someFile = file('build/somefile.txt')
+artifacts {
+    archives someFile
+}
 
 publishing {
-    repositories {
-    	maven {
-        	def s = version.endsWith('-SNAPSHOT') ? 'snapshot' : 'release'
-        	url "${repositoryManagerUrl}/plugins-${s}-local"
-        	credentials {
-            	username repositoryManagerUsername
-            	password repositoryManagerPassword
-        }
-    }
-}
     publications {
-        maven(MavenPublication) {
-            artifactId artifact
+        mavenJava(MavenPublication) {
             from components.java
         }
     }
