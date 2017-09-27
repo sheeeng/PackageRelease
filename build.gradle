@@ -3,8 +3,12 @@ apply plugin: 'maven-publish'
 apply plugin: 'application'
 
 def promoteToEnv = 'test'
-String nexusUrl = 'http://18.194.104.10:8081'
-String targetBinary = 'net.praqma.codeacademy:gildedrose:0.0.2-2017.09.26T12.23.20.258-9fc13ae88875e4dcf62fc55e0b42ece5ef7bbe69'
+String nexusUrl = 'http://35.158.242.34:8081'
+String targetGroup = 'net.praqma.codeacademy'
+String targetArtifact = 'gildedrose'
+String targetVersion = '0.0.2-2017.09.26T12.23.20.258-9fc13ae88875e4dcf62fc55e0b42ece5ef7bbe69'
+String targetBinary = "${targetGroup}:${targetArtifact}:${targetVersion}"
+String targetDir = 'target'
 
 def repoList = [
     dev: [
@@ -38,10 +42,10 @@ dependencies{
 
 task copyDependencies(type: Copy) {
    from configurations.compile
-   into 'dependencies'
+   into targetDir
 }
 
-def someFile = file('dependencies/gildedrose-0.0.2-2017.09.26T12.23.20.258-9fc13ae88875e4dcf62fc55e0b42ece5ef7bbe69.jar')
+def someFile = file("${targetDir}/${targetArtifact}-${targetVersion}.jar")
 artifacts {
     archives someFile
 }
@@ -62,11 +66,13 @@ publishing {
 publishing {
     publications {
         mavenJava(MavenPublication) {
-            groupId 'net.praqma.codeacademy'
-            artifactId 'gildedrose'
-            version '0.0.2-2017.09.26T12.23.20.258-9fc13ae88875e4dcf62fc55e0b42ece5ef7bbe69'
+            groupId targetGroup
+            artifactId targetArtifact
+            version targetVersion
 
-            artifact someFile
+            artifact(someFile) {
+                builtBy copyDependencies
+            }
         }
     }
 }
