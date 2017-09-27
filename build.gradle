@@ -1,13 +1,9 @@
 apply plugin: 'groovy'
-apply plugin: 'maven-publish'
-apply plugin: 'application'
 
-def promoteToEnv = 'test'
+apply plugin: 'application'
+apply plugin: 'maven-publish'
+
 String nexusUrl = 'http://35.158.242.34:8081'
-String targetGroup = 'net.praqma.codeacademy'
-String targetArtifact = 'gildedrose'
-String targetVersion = '0.0.2-2017.09.26T12.23.20.258-9fc13ae88875e4dcf62fc55e0b42ece5ef7bbe69'
-String targetBinary = "${targetGroup}:${targetArtifact}:${targetVersion}"
 String targetDir = 'target'
 
 def repoList = [
@@ -29,15 +25,48 @@ def repoList = [
     ]
 ]
 
+def targetEnvironment, pomFile
+if (
+    project.hasProperty('targetEnvironment') \
+    && project.hasProperty('pomFile')){
+        targetEnvironment = project.properties.targetEnvironment
+        pomFile = project.properties.pomFile
+}
+else{
+    print('''
+        Usage:
+            gradlew publish [--info]
+            -P targetEnvironment=<targetEnviroment>
+            -P pomFile=<pathToPomFile>
+        ''')
+    throw new InvalidUserDataException("Missing arguments.")
+}
+println ""
+
+println 'Variables Map:'
+def map =[
+    'targetEnvironment: ':targetEnvironment,
+    'to: ':pomFile
+]
+map.each{
+    k,v -> println "* " + "${k}${v}"
+}
+println ""
+
+
+def pomData = new XmlSlurper().parse(pomFile)
+//println "Type = " + pomData.artifactId
+println "Artifact dependency from pomfile is ${pomData.groupId}:${pomData.artifactId}:${pomData.version}"
+
 repositories {
     maven {
-        url "${nexusUrl}/${repoList.get(promoteToEnv).from}"
+        url "${nexusUrl}/${repoList.get(targetEnvironment).from}"
     }
 }
 
 
 dependencies{
-    compile targetBinary
+    compile "${pomData.groupId}:${pomData.artifactId}:${pomData.version}"
 }
 
 task copyDependencies(type: Copy) {
@@ -45,34 +74,31 @@ task copyDependencies(type: Copy) {
    into targetDir
 }
 
-def someFile = file("${targetDir}/${targetArtifact}-${targetVersion}.jar")
+def someFile = file("${targetDir}/${pomData.artifactId}-${pomData.version}.jar")
 artifacts {
     archives someFile
 }
 
 
-publishing {
-    repositories {
-        maven {
-            url "${nexusUrl}/${repoList.get(promoteToEnv).target}"
-            credentials {
-                username "$mavenUser"
-                password "$mavenPassword"
-            }
+publishing.repositories {
+    maven {
+        url "${nexusUrl}/${repoList.get(targetEnvironment).target}"
+        credentials {
+            username "$mavenUser"
+            password "$mavenPassword"
         }
     }
 }
 
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            groupId targetGroup
-            artifactId targetArtifact
-            version targetVersion
 
-            artifact(someFile) {
-                builtBy copyDependencies
-            }
+publishing.publications {
+    mavenJava(MavenPublication) {
+        groupId "${pomData.groupId}"
+        artifactId "${pomData.artifactId}"
+        version "${pomData.version}"
+
+        artifact(someFile) {
+            builtBy copyDependencies
         }
     }
 }
