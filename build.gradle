@@ -1,12 +1,15 @@
 apply plugin: 'groovy'
-
 apply plugin: 'application'
 apply plugin: 'maven-publish'
 
+// Hardcoded stuffs
+// TODO: Consider making these property parameters too?
 String nexusUrl = 'http://35.158.242.34:8081'
 String targetDir = 'target'
 
 def repoList = [
+    // TODO: Consider if we remove DEV?
+    //  We never really deploy to DEV, that's the buildjob's job
     dev: [
         from: 'N/A',
         target: 'repository/workshop-dev/'
@@ -26,13 +29,10 @@ def repoList = [
 ]
 
 def targetEnvironment, pomFile
-if (
-    project.hasProperty('targetEnvironment') \
-    && project.hasProperty('pomFile')){
+if (project.hasProperty('targetEnvironment') && project.hasProperty('pomFile')){
         targetEnvironment = project.properties.targetEnvironment
         pomFile = project.properties.pomFile
-}
-else{
+} else {
     print('''
         Usage:
             gradlew publish [--info]
@@ -41,8 +41,8 @@ else{
         ''')
     throw new InvalidUserDataException("Missing arguments.")
 }
-println ""
 
+/*// Debug print
 println 'Variables Map:'
 def map =[
     'targetEnvironment: ':targetEnvironment,
@@ -52,19 +52,19 @@ map.each{
     k,v -> println "* " + "${k}${v}"
 }
 println ""
-
+*/
 
 def pomData = new XmlSlurper().parse(pomFile)
-//println "Type = " + pomData.artifactId
-println "Artifact dependency from pomfile is ${pomData.groupId}:${pomData.artifactId}:${pomData.version}"
+// println "Artifact dependency from pomfile is ${pomData.groupId}:${pomData.artifactId}:${pomData.version}"
 
+// Specify target to download through maven
 repositories {
     maven {
         url "${nexusUrl}/${repoList.get(targetEnvironment).from}"
     }
 }
 
-
+// Ensure we've got the binary downloaded
 dependencies{
     compile "${pomData.groupId}:${pomData.artifactId}:${pomData.version}"
 }
@@ -79,7 +79,7 @@ artifacts {
     archives someFile
 }
 
-
+// Set target Nexus repo/bucket to upload to
 publishing.repositories {
     maven {
         url "${nexusUrl}/${repoList.get(targetEnvironment).target}"
@@ -90,7 +90,7 @@ publishing.repositories {
     }
 }
 
-
+// Gradle-specific code to ensure this whole shebang works as intended
 publishing.publications {
     mavenJava(MavenPublication) {
         groupId "${pomData.groupId}"
