@@ -2,15 +2,38 @@ apply plugin: 'groovy'
 apply plugin: 'maven-publish'
 apply plugin: 'application'
 
+def promoteToEnv = 'test'
+String nexusUrl = 'http://18.194.104.10:8081'
+String targetBinary = 'net.praqma.codeacademy:gildedrose:0.0.2-2017.09.26T12.23.20.258-9fc13ae88875e4dcf62fc55e0b42ece5ef7bbe69'
+
+def repoList = [
+    dev: [
+        from: 'N/A',
+        target: 'repository/workshop-dev/'
+    ],
+    test: [
+        from: 'repository/workshop-dev/',
+        target: 'repository/workshop-test/'
+    ],
+    staging: [
+        from: 'repository/workshop-test/',
+        target: 'repository/workshop-staging/'
+    ],
+    prod: [
+        from: 'repository/workshop-staging/',
+        target: 'repository/workshop-prod/'
+    ]
+]
+
 repositories {
     maven {
-        url "http://18.194.104.10:8081/repository/workshop-dev/"
+        url "${nexusUrl}/${repoList.get(promoteToEnv).from}"
     }
 }
 
 
 dependencies{
-	compile 'net.praqma.codeacademy:gildedrose:0.0.2-2017.09.26T12.23.20.258-9fc13ae88875e4dcf62fc55e0b42ece5ef7bbe69'
+    compile targetBinary
 }
 
 task copyDependencies(type: Copy) {
@@ -27,8 +50,7 @@ artifacts {
 publishing {
     repositories {
         maven {
-            // change to point to your repo, e.g. http://my.org/repo
-            url "http://18.194.104.10:8081/repository/workshop-test"
+            url "${nexusUrl}/${repoList.get(promoteToEnv).target}"
             credentials {
                 username "$mavenUser"
                 password "$mavenPassword"
