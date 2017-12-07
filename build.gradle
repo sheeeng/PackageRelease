@@ -1,30 +1,35 @@
 apply plugin: 'groovy'
 apply plugin: 'application'
+apply plugin: 'maven'
 apply plugin: 'maven-publish'
 
 // Hardcoded stuffs
 // TODO: Consider making these property parameters too?
-String nexusUrl = 'http://35.158.242.34:8081'
+String nexusUrl = 'http://localhost:8081/nexus3'
 String targetDir = 'target'
 
 def repoList = [
     // TODO: Consider if we remove DEV?
     //  We never really deploy to DEV, that's the buildjob's job
-    dev: [
+    alpha: [
         from: 'N/A',
-        target: 'repository/workshop-dev/'
+        target: 'repository/sponge-alpha/'
     ],
-    test: [
-        from: 'repository/workshop-dev/',
-        target: 'repository/workshop-test/'
+    beta: [
+        from: 'repository/sponge-alpha/',
+        target: 'repository/sponge-beta/'
     ],
-    staging: [
-        from: 'repository/workshop-test/',
-        target: 'repository/workshop-staging/'
+    gamma: [
+        from: 'repository/sponge-beta/',
+        target: 'repository/sponge-gamma/'
     ],
-    prod: [
-        from: 'repository/workshop-staging/',
-        target: 'repository/workshop-prod/'
+    delta: [
+        from: 'repository/sponge-gamma/',
+        target: 'repository/sponge-delta/'
+    ],
+    epsilon: [
+        from: 'repository/sponge-delta/',
+        target: 'repository/sponge-epsilon/'
     ]
 ]
 
@@ -42,7 +47,7 @@ if (project.hasProperty('targetEnvironment') && project.hasProperty('pomFile')){
     throw new InvalidUserDataException("Missing arguments.")
 }
 
-/*// Debug print
+
 println 'Variables Map:'
 def map =[
     'targetEnvironment: ':targetEnvironment,
@@ -52,10 +57,10 @@ map.each{
     k,v -> println "* " + "${k}${v}"
 }
 println ""
-*/
+
 
 def pomData = new XmlSlurper().parse(pomFile)
-// println "Artifact dependency from pomfile is ${pomData.groupId}:${pomData.artifactId}:${pomData.version}"
+println "Artifact dependency from pomfile is ${pomData.groupId}:${pomData.artifactId}:${pomData.version}"
 
 // Specify target to download through maven
 repositories {
