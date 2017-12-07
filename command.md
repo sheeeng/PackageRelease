@@ -1,5 +1,9 @@
 # Commands
 
+These are prototyping steps for artifact promotion only. There is no continuous versioning here.
+
+Note: These steps assume Jenkins has continuous versioning in place with `Jenkinsfile`.
+
 * Checkout `git@github.com:sheeeng/gildedrose.git` or `https://github.com/sheeeng/gildedrose.git` repository.
 
 * Run Nexus 3 in local Docker environment.
