@@ -1,10 +1,78 @@
 # Commands
 
+* Checkout `git@github.com:sheeeng/gildedrose.git` or `https://github.com/sheeeng/gildedrose.git` repository.
+
+* Run Nexus 3 in local Docker environment.
+
 ```
-$ ./gradlew publish -P targetEnvironment=beta -P pomFile=../gilded-rose/pom.xml
+mkdir -p /opt/containers/nexus3/nexus-data; \
+sudo chown -R 200 /opt/containers/nexus3/nexus-data;
+
+docker pull sonatype/nexus3; \
+docker rm -fv nexus-three; \
+docker run \
+--name nexus-three \
+--publish 8081:8081 \
+--env NEXUS_CONTEXT=nexus3 \
+--volume /opt/containers/nexus3/nexus-data:/nexus-data \
+sonatype/nexus3
+```
+
+* Create relevant Nexus repositories.
+
+For example, `sponge-alpha`, `sponge-beta`, etc. See the map in `build.gradle` for more information.
+
+* Verify you `settings.xml` has the below content.
+
+```
+cat ~/.m2/settings.xml 
+<?xml version="1.0"?>
+<settings>
+  <servers>
+    <server>
+      <id>workshop-gildedrose</id>
+      <username>admin</username>
+      <password>{0LMeW1h2uPIHaki14o07gyafNHzc/4h0f5eWo9wy2Mk=}</password>
+    </server>
+  </servers>
+  <profiles>
+    <profile>
+      <id>workshop-gildedrose</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <repositories>
+        <repository>
+          <id>central</id>
+	  <url>http://localhost:8081/nexus3/repository/maven-central</url>
+        </repository>
+        <repository>
+          <id>sponge-alpha</id>
+          <url>http://localhost:8081/nexus3/repository/sponge-alpha</url>
+        </repository>
+      </repositories>
+    </profile>
+  </profiles>
+</settings>
+```
+
+* Use following commands inside `gildedrose` repository.
+
+```
+mvn install
+mvn site
+mvn deploy
+```
+
+You would have an artifact stored in Nexus under `sponge-alpha` repository.
+
+* Run the below command to promote single artifact.
+
+```
+$ ./gradlew publish -P targetEnvironment=beta -P pomFile=../gildedrose/pom.xml
 Variables Map:
 * targetEnvironment: beta
-* to: ../gilded-rose/pom.xml
+* to: ../gildedrose/pom.xml
 
 Artifact dependency from pomfile is net.praqma.codeacademy:gildedrose:0.0.2-2017.12.07T09.31.08.855-54ec33a9801d8974e0f300c8b1a02ee5fd240b48
 :copyDependencies
@@ -27,11 +95,13 @@ BUILD SUCCESSFUL
 Total time: 1.221 secs
 ```
 
+A failed example for promoting an artifact that did not exist in the source repository map.
+
 ```
-$ ./gradlew publish -P targetEnvironment=delta -P pomFile=../gilded-rose/pom.xml
+$ ./gradlew publish -P targetEnvironment=delta -P pomFile=../gildedrose/pom.xml
 Variables Map:
 * targetEnvironment: delta
-* to: ../gilded-rose/pom.xml
+* to: ../gildedrose/pom.xml
 
 Artifact dependency from pomfile is net.praqma.codeacademy:gildedrose:0.0.2-2017.12.07T09.31.08.855-54ec33a9801d8974e0f300c8b1a02ee5fd240b48
 :copyDependencies FAILED
