@@ -66,6 +66,16 @@ mvn deploy
 
 You would have an artifact stored in Nexus under `sponge-alpha` repository.
 
+* Verify that you `gradle.properties` has below content. Use the correct password.
+
+```
+$ cat ~/.gradle/gradle.properties 
+mavenUser=admin
+mavenPassword=mavenPassword
+```
+
+Note: This file cannot use the encrypted password from Maven context.
+
 * Run the below command to promote single artifact.
 
 ```
