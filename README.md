@@ -1,3 +1,7 @@
+---
+maintainer: naesheim
+---
+
 # Package Plugin
 
 This gradle plugin collects artifacts from one repo and promote them to a new repo as a bundled up zip.
